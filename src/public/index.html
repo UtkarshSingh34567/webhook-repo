@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Webhook Events</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .event-container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .event {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .event .author {
+            font-weight: bold;
+            color: #333;
+        }
+        .event .timestamp {
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="event-container">
+        <h1>Recent GitHub Events</h1>
+        <div id="event-list"></div>
+    </div>
+
+    <script>
+        const eventList = document.getElementById('event-list');
+        const socket = new WebSocket('ws://' + window.location.host);
+
+        socket.onmessage = function(event) {
+            const eventData = JSON.parse(event.data);
+            const eventElement = document.createElement('div');
+            eventElement.classList.add('event');
+
+            let eventText = '';
+
+            if (eventData.action === 'push') {
+                eventText = `${eventData.author} pushed to ${eventData.to_branch} on ${new Date(eventData.timestamp).toLocaleString()}`;
+            } else if (eventData.action === 'pull_request') {
+                eventText = `${eventData.author} submitted a pull request from ${eventData.from_branch} to ${eventData.to_branch} on ${new Date(eventData.timestamp).toLocaleString()}`;
+            } else if (eventData.action === 'merge') {
+                eventText = `${eventData.author} merged branch ${eventData.from_branch} to ${eventData.to_branch} on ${new Date(eventData.timestamp).toLocaleString()}`;
+            }
+
+            eventElement.innerHTML = `
+                <div class="author">${eventText}</div>
+                <div class="timestamp">${new Date(eventData.timestamp).toLocaleString()}</div>
+            `;
+            eventList.prepend(eventElement);
+        };
+    </script>
+</body>
+</html>
